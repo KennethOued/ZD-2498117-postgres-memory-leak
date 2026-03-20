@@ -75,14 +75,6 @@ postgres:1240cadb26958901 [OK]
 ```
 *Source: `status.log`, Running Checks section*
 
----
-
-## 3. Key insight from engineering (CONS-8148)
-
-From [Aldrick Castro, Mar 5](https://datadoghq.atlassian.net/browse/CONS-8148):
-> The Postgres integration is written in **Python**. The Go profile flares only cover the Go runtime, not Python. [...] In the profiles we can see that **the Python Check section is a very small contributor** to the memory usage.
-
-This means the memory leak is **NOT in the Postgres Python check itself** — it's in the **Go runtime** of the agent. Something triggered by running many check instances, but the actual allocation happens in Go (tagger, metadata, serialization, forwarder).
 
 ---
 
@@ -137,12 +129,7 @@ Deployed on **minikube** (4 CPU, 12 GB) via Helm:
 
 4. **Compare with Agent 7.43.1** — same 52-instance setup with old agent to confirm regression
 
-5. **Escalate to engineering** with:
-   - This reproduction setup (ready to clone and run)
-   - Customer flare memstats
-   - Aldrick's observation that Python check is small contributor → leak is in Go runtime
-   - Reference [SDBM-2278](https://datadoghq.atlassian.net/browse/SDBM-2278) and [CONS-8086](https://datadoghq.atlassian.net/browse/CONS-8086)
-   - Request code-level review of Go memory handling changes between 7.43.1 and 7.74.1 for high check-instance scenarios
+5. **Check findings with TEEs**
 
 ---
 
