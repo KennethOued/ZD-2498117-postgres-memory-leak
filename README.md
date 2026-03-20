@@ -204,7 +204,7 @@ No function holds more than 7.6 MB. No pprof is available from the customer's po
 
 1. **Let reproduction run 12-24h** to check if the leak is time-dependent
 
-2. **Request pprof heap profile** from customer while memory is high:
+2. **Request pprof heap profile** from customer while memory is high ?
    ```bash
    kubectl exec <CCR> -- curl -o heap.prof http://localhost:5000/debug/pprof/heap
    ```
