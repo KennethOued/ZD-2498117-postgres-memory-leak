@@ -1,0 +1,50 @@
+## Reproduction environment for ZD-2498117 / CONS-8148
+## Customer: Tabby - High memory usage on CCR pods with Postgres check
+## Agent version: 7.74.1 (exact match)
+## Config: Source B (kube_services annotations) - relation_regex: .*, max_relations: 300, dbm: false
+## 10 databases x 300 tables each = 3,000 relations total
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh
+      - pgdata:/var/lib/postgresql/data
+    shm_size: 256mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:7.74.1
+    environment:
+      - DD_API_KEY=${DD_API_KEY:-placeholder_key_for_local_repro}
+      - DD_HOSTNAME=repro-zd-2498117
+      - DD_LOG_LEVEL=debug
+      - DD_EXPVAR_PORT=5000
+      - DD_CMD_PORT=5001
+      - DD_HEALTH_PORT=5555
+      # Disable components we don't need for repro
+      - DD_APM_ENABLED=false
+      - DD_PROCESS_AGENT_ENABLED=false
+      - DD_LOGS_ENABLED=false
+      # No memory limits (BestEffort QoS like customer)
+    volumes:
+      - ./conf.d/postgres.yaml:/etc/datadog-agent/conf.d/postgres.d/postgres.yaml:ro
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

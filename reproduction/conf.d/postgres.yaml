@@ -1,0 +1,419 @@
+## Reproduction of customer Source B config (from kube_services annotations)
+## Ticket: ZD-2498117 / CONS-8148
+## Agent: 7.74.1 | Postgres check: 23.3.3
+## Key params: relation_regex: .*, max_relations: 300, dbm: false
+##
+## Customer has 52 instances; we use 10 databases to reproduce the pattern.
+
+init_config:
+
+instances:
+  - host: postgres
+    port: 5432
+    username: datadog
+    password: datadog
+    dbname: feeds_statistics
+    dbstrict: true
+    relations:
+      - relation_regex: ".*"
+    max_relations: 300
+    dbm: false
+    collect_count_metrics: true
+    collect_database_size_metrics: true
+    custom_queries:
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, activity.datname, activity.pid,
+          blocking.pid AS blocking_pid
+          FROM pg_stat_activity AS activity
+          JOIN pg_stat_activity AS blocking
+          ON blocking.pid = ANY(pg_blocking_pids(activity.pid))
+        columns:
+          - name: blocked_query
+            type: gauge
+          - name: blocked_db
+            type: tag
+          - name: blocked_pid
+            type: tag
+          - name: blocking_pid
+            type: tag
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, current_database() as database_name,
+          indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid
+        columns:
+          - name: corrupted_index
+            type: gauge
+          - name: database_name
+            type: tag
+          - name: index_name
+            type: tag
+
+  - host: postgres
+    port: 5432
+    username: datadog
+    password: datadog
+    dbname: plugins_auth
+    dbstrict: true
+    relations:
+      - relation_regex: ".*"
+    max_relations: 300
+    dbm: false
+    collect_count_metrics: true
+    collect_database_size_metrics: true
+    custom_queries:
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, activity.datname, activity.pid,
+          blocking.pid AS blocking_pid
+          FROM pg_stat_activity AS activity
+          JOIN pg_stat_activity AS blocking
+          ON blocking.pid = ANY(pg_blocking_pids(activity.pid))
+        columns:
+          - name: blocked_query
+            type: gauge
+          - name: blocked_db
+            type: tag
+          - name: blocked_pid
+            type: tag
+          - name: blocking_pid
+            type: tag
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, current_database() as database_name,
+          indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid
+        columns:
+          - name: corrupted_index
+            type: gauge
+          - name: database_name
+            type: tag
+          - name: index_name
+            type: tag
+
+  - host: postgres
+    port: 5432
+    username: datadog
+    password: datadog
+    dbname: plugins_config
+    dbstrict: true
+    relations:
+      - relation_regex: ".*"
+    max_relations: 300
+    dbm: false
+    collect_count_metrics: true
+    collect_database_size_metrics: true
+    custom_queries:
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, activity.datname, activity.pid,
+          blocking.pid AS blocking_pid
+          FROM pg_stat_activity AS activity
+          JOIN pg_stat_activity AS blocking
+          ON blocking.pid = ANY(pg_blocking_pids(activity.pid))
+        columns:
+          - name: blocked_query
+            type: gauge
+          - name: blocked_db
+            type: tag
+          - name: blocked_pid
+            type: tag
+          - name: blocking_pid
+            type: tag
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, current_database() as database_name,
+          indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid
+        columns:
+          - name: corrupted_index
+            type: gauge
+          - name: database_name
+            type: tag
+          - name: index_name
+            type: tag
+
+  - host: postgres
+    port: 5432
+    username: datadog
+    password: datadog
+    dbname: users_profiles
+    dbstrict: true
+    relations:
+      - relation_regex: ".*"
+    max_relations: 300
+    dbm: false
+    collect_count_metrics: true
+    collect_database_size_metrics: true
+    custom_queries:
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, activity.datname, activity.pid,
+          blocking.pid AS blocking_pid
+          FROM pg_stat_activity AS activity
+          JOIN pg_stat_activity AS blocking
+          ON blocking.pid = ANY(pg_blocking_pids(activity.pid))
+        columns:
+          - name: blocked_query
+            type: gauge
+          - name: blocked_db
+            type: tag
+          - name: blocked_pid
+            type: tag
+          - name: blocking_pid
+            type: tag
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, current_database() as database_name,
+          indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid
+        columns:
+          - name: corrupted_index
+            type: gauge
+          - name: database_name
+            type: tag
+          - name: index_name
+            type: tag
+
+  - host: postgres
+    port: 5432
+    username: datadog
+    password: datadog
+    dbname: orders_processing
+    dbstrict: true
+    relations:
+      - relation_regex: ".*"
+    max_relations: 300
+    dbm: false
+    collect_count_metrics: true
+    collect_database_size_metrics: true
+    custom_queries:
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, activity.datname, activity.pid,
+          blocking.pid AS blocking_pid
+          FROM pg_stat_activity AS activity
+          JOIN pg_stat_activity AS blocking
+          ON blocking.pid = ANY(pg_blocking_pids(activity.pid))
+        columns:
+          - name: blocked_query
+            type: gauge
+          - name: blocked_db
+            type: tag
+          - name: blocked_pid
+            type: tag
+          - name: blocking_pid
+            type: tag
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, current_database() as database_name,
+          indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid
+        columns:
+          - name: corrupted_index
+            type: gauge
+          - name: database_name
+            type: tag
+          - name: index_name
+            type: tag
+
+  - host: postgres
+    port: 5432
+    username: datadog
+    password: datadog
+    dbname: payment_gateway
+    dbstrict: true
+    relations:
+      - relation_regex: ".*"
+    max_relations: 300
+    dbm: false
+    collect_count_metrics: true
+    collect_database_size_metrics: true
+    custom_queries:
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, activity.datname, activity.pid,
+          blocking.pid AS blocking_pid
+          FROM pg_stat_activity AS activity
+          JOIN pg_stat_activity AS blocking
+          ON blocking.pid = ANY(pg_blocking_pids(activity.pid))
+        columns:
+          - name: blocked_query
+            type: gauge
+          - name: blocked_db
+            type: tag
+          - name: blocked_pid
+            type: tag
+          - name: blocking_pid
+            type: tag
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, current_database() as database_name,
+          indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid
+        columns:
+          - name: corrupted_index
+            type: gauge
+          - name: database_name
+            type: tag
+          - name: index_name
+            type: tag
+
+  - host: postgres
+    port: 5432
+    username: datadog
+    password: datadog
+    dbname: notifications_svc
+    dbstrict: true
+    relations:
+      - relation_regex: ".*"
+    max_relations: 300
+    dbm: false
+    collect_count_metrics: true
+    collect_database_size_metrics: true
+    custom_queries:
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, activity.datname, activity.pid,
+          blocking.pid AS blocking_pid
+          FROM pg_stat_activity AS activity
+          JOIN pg_stat_activity AS blocking
+          ON blocking.pid = ANY(pg_blocking_pids(activity.pid))
+        columns:
+          - name: blocked_query
+            type: gauge
+          - name: blocked_db
+            type: tag
+          - name: blocked_pid
+            type: tag
+          - name: blocking_pid
+            type: tag
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, current_database() as database_name,
+          indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid
+        columns:
+          - name: corrupted_index
+            type: gauge
+          - name: database_name
+            type: tag
+          - name: index_name
+            type: tag
+
+  - host: postgres
+    port: 5432
+    username: datadog
+    password: datadog
+    dbname: analytics_events
+    dbstrict: true
+    relations:
+      - relation_regex: ".*"
+    max_relations: 300
+    dbm: false
+    collect_count_metrics: true
+    collect_database_size_metrics: true
+    custom_queries:
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, activity.datname, activity.pid,
+          blocking.pid AS blocking_pid
+          FROM pg_stat_activity AS activity
+          JOIN pg_stat_activity AS blocking
+          ON blocking.pid = ANY(pg_blocking_pids(activity.pid))
+        columns:
+          - name: blocked_query
+            type: gauge
+          - name: blocked_db
+            type: tag
+          - name: blocked_pid
+            type: tag
+          - name: blocking_pid
+            type: tag
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, current_database() as database_name,
+          indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid
+        columns:
+          - name: corrupted_index
+            type: gauge
+          - name: database_name
+            type: tag
+          - name: index_name
+            type: tag
+
+  - host: postgres
+    port: 5432
+    username: datadog
+    password: datadog
+    dbname: inventory_mgmt
+    dbstrict: true
+    relations:
+      - relation_regex: ".*"
+    max_relations: 300
+    dbm: false
+    collect_count_metrics: true
+    collect_database_size_metrics: true
+    custom_queries:
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, activity.datname, activity.pid,
+          blocking.pid AS blocking_pid
+          FROM pg_stat_activity AS activity
+          JOIN pg_stat_activity AS blocking
+          ON blocking.pid = ANY(pg_blocking_pids(activity.pid))
+        columns:
+          - name: blocked_query
+            type: gauge
+          - name: blocked_db
+            type: tag
+          - name: blocked_pid
+            type: tag
+          - name: blocking_pid
+            type: tag
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, current_database() as database_name,
+          indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid
+        columns:
+          - name: corrupted_index
+            type: gauge
+          - name: database_name
+            type: tag
+          - name: index_name
+            type: tag
+
+  - host: postgres
+    port: 5432
+    username: datadog
+    password: datadog
+    dbname: session_store
+    dbstrict: true
+    relations:
+      - relation_regex: ".*"
+    max_relations: 300
+    dbm: false
+    collect_count_metrics: true
+    collect_database_size_metrics: true
+    custom_queries:
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, activity.datname, activity.pid,
+          blocking.pid AS blocking_pid
+          FROM pg_stat_activity AS activity
+          JOIN pg_stat_activity AS blocking
+          ON blocking.pid = ANY(pg_blocking_pids(activity.pid))
+        columns:
+          - name: blocked_query
+            type: gauge
+          - name: blocked_db
+            type: tag
+          - name: blocked_pid
+            type: tag
+          - name: blocking_pid
+            type: tag
+      - metric_prefix: postgresql
+        query: >-
+          SELECT 1 as status, current_database() as database_name,
+          indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid
+        columns:
+          - name: corrupted_index
+            type: gauge
+          - name: database_name
+            type: tag
+          - name: index_name
+            type: tag
