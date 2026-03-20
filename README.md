@@ -3,8 +3,8 @@
 **Ticket**: [ZD-2498117](https://datadog.zendesk.com/agent/tickets/2498117)  
 **Jira**: [CONS-8148](https://datadoghq.atlassian.net/browse/CONS-8148)  
 **Related**: [SDBM-2278](https://datadoghq.atlassian.net/browse/SDBM-2278) (similar pattern, different customer, Agent 7.73.3)  
-**Related**: [CONS-8086](https://datadoghq.atlassian.net/browse/CONS-8086) (engineering review)  
-**Investigator**: Kenneth Ouedraogo (TSE2)
+**Related**: [CONS-8086](https://datadoghq.atlassian.net/browse/CONS-8086)   
+**Investigator**: Kenneth Ouedraogo 
 
 ---
 
