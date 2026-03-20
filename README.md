@@ -71,15 +71,6 @@ Sys:           46.2 GB      GCCPUFraction: 1.9%
 
 ---
 
-## 3. Key insight from engineering
-
-From [Aldrick Castro, Mar 5](https://datadoghq.atlassian.net/browse/CONS-8148):
-> The Postgres integration is written in **Python**. The Go profile flares only cover the Go runtime, not Python. In the profiles we can see that **the Python Check section is a very small contributor** to the memory usage.
-
-The memory leak is **in the Go runtime** of the agent, not in the Postgres Python check.
-
----
-
 ## 4. Reproduction
 
 ### Setup
@@ -154,15 +145,15 @@ Checks loaded from `kube_services:kube_service://repro/pgb-repro-*[0]` — match
 
 1. **Let reproduction run 12-24h** to check if the leak is time-dependent
 
-2. **Request pprof heap profile** from customer while memory is high:
+2. **Request pprof heap profile** from customer while memory is high ?
    ```bash
    kubectl exec <CCR> -- curl -o heap.prof http://localhost:5000/debug/pprof/heap
    ```
-   This shows exactly which Go functions are holding the 16.9 GB — the most direct way to find root cause since Aldrick confirmed the leak is in Go, not Python.
+   
 
 3. **Compare with Agent 7.43.1** — same 52-instance setup with old version to confirm regression
 
-4. **Escalate to engineering** with this reproduction + customer flare data + reference SDBM-2278
+4. **Double check with TEEs** 
 
 ---
 
