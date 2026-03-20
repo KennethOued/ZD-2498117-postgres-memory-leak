@@ -1,0 +1,1040 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-feeds-statistics
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "feeds_statistics", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: feeds_statistics
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-plugins-auth
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "plugins_auth", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: plugins_auth
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-plugins-config
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "plugins_config", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: plugins_config
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-users-profiles
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "users_profiles", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: users_profiles
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-orders-processing
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "orders_processing", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: orders_processing
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-payment-gateway
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "payment_gateway", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: payment_gateway
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-notifications-svc
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "notifications_svc", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: notifications_svc
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-analytics-events
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "analytics_events", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: analytics_events
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-inventory-mgmt
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "inventory_mgmt", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: inventory_mgmt
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-session-store
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "session_store", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: session_store
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-auth-service
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "auth_service", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: auth_service
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-billing-core
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "billing_core", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: billing_core
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-catalog-products
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "catalog_products", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: catalog_products
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-chat-messages
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "chat_messages", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: chat_messages
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-config-store
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "config_store", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: config_store
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-content-delivery
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "content_delivery", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: content_delivery
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-crm-contacts
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "crm_contacts", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: crm_contacts
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-data-pipeline
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "data_pipeline", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: data_pipeline
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-device-registry
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "device_registry", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: device_registry
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-docs-storage
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "docs_storage", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: docs_storage
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-email-templates
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "email_templates", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: email_templates
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-feature-flags
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "feature_flags", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: feature_flags
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-file-uploads
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "file_uploads", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: file_uploads
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-fraud-detection
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "fraud_detection", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: fraud_detection
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-geo-location
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "geo_location", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: geo_location
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-graph-social
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "graph_social", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: graph_social
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-health-checks
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "health_checks", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: health_checks
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-identity-provider
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "identity_provider", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: identity_provider
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-image-processing
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "image_processing", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: image_processing
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-job-scheduler
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "job_scheduler", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: job_scheduler
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-key-vault
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "key_vault", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: key_vault
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-logging-service
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "logging_service", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: logging_service
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-media-transcoder
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "media_transcoder", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: media_transcoder
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-metrics-aggregator
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "metrics_aggregator", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: metrics_aggregator
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-notification-prefs
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "notification_prefs", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: notification_prefs
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-oauth-tokens
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "oauth_tokens", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: oauth_tokens
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-onboarding-flow
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "onboarding_flow", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: onboarding_flow
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-payment-ledger
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "payment_ledger", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: payment_ledger
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-permissions-acl
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "permissions_acl", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: permissions_acl
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-pricing-engine
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "pricing_engine", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: pricing_engine
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-queue-manager
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "queue_manager", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: queue_manager
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-rate-limiter
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "rate_limiter", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: rate_limiter
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-recommendation-engine
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "recommendation_engine", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: recommendation_engine
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-referral-program
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "referral_program", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: referral_program
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-reporting-dash
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "reporting_dash", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: reporting_dash
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-search-index
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "search_index", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: search_index
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-security-audit
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "security_audit", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: security_audit
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-shipping-tracker
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "shipping_tracker", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: shipping_tracker
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-subscription-mgmt
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "subscription_mgmt", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: subscription_mgmt
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-tax-calculator
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "tax_calculator", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: tax_calculator
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-usage-metering
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "usage_metering", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: usage_metering
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgb-repro-webhook-dispatcher
+  namespace: repro
+  annotations:
+    ad.datadoghq.com/service.check_names: '["postgres"]'
+    ad.datadoghq.com/service.init_configs: '[{}]'
+    ad.datadoghq.com/service.instances: '[{"host": "postgres.repro.svc.cluster.local", "port": 5432, "username": "datadog", "password": "datadog", "dbname": "webhook_dispatcher", "dbstrict": true, "relations": [{"relation_regex": ".*"}], "max_relations": 300, "dbm": false, "collect_count_metrics": true, "collect_database_size_metrics": true, "custom_queries": [{"metric_prefix": "postgresql", "query": "SELECT 1 as status, activity.datname, activity.pid, blocking.pid AS blocking_pid FROM pg_stat_activity AS activity JOIN pg_stat_activity AS blocking ON blocking.pid = ANY(pg_blocking_pids(activity.pid))", "columns": [{"name": "blocked_query", "type": "gauge"}, {"name": "blocked_db", "type": "tag"}, {"name": "blocked_pid", "type": "tag"}, {"name": "blocking_pid", "type": "tag"}]}, {"metric_prefix": "postgresql", "query": "SELECT 1 as status, current_database() as database_name, indexrelid::regclass index_name FROM pg_index WHERE NOT indisvalid", "columns": [{"name": "corrupted_index", "type": "gauge"}, {"name": "database_name", "type": "tag"}, {"name": "index_name", "type": "tag"}]}]}]'
+  labels:
+    app: pgbouncer-repro
+    database: webhook_dispatcher
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP

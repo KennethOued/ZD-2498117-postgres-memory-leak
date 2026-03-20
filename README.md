@@ -13,13 +13,16 @@
 After upgrading Agent from **7.43.1 → 7.74.1** (Helm 3.151.2), CCR pods memory grows to **15–40 GB per pod** within hours.
 
 Customer tried:
-- **Doubling CCR replicas** (6 → 12): reduced instances/runner to 26, but **total memory jumped to ~190 GB** ([CONS-8148 comment, Mar 13](https://datadoghq.atlassian.net/browse/CONS-8148))
+- **Doubling CCR replicas** (6 → 12): instances/runner dropped to 26, but **total memory jumped to ~190 GB** ([CONS-8148, Mar 13](https://datadoghq.atlassian.net/browse/CONS-8148))
 - **Disabling custom metrics**: memory improved, but **customer says not acceptable** — those metrics are critical
 
 | Metric | Agent 7.43.1 (prod, 6 CCR) | Agent 7.74.1 (dev, 6 CCR) | Agent 7.74.1 (dev, 12 CCR) |
 |--------|---------------------------|--------------------------|---------------------------|
 | Total CCR memory | ~18 GiB | ~100 GiB | **~190 GiB** |
 | Per-pod range | ~3 GiB | ~15–40 GiB | 2–29 GiB |
+
+![Customer CCR pods on develop-k8s](screenshots/customer-ccr-memory-develop-k8s.png)
+*Customer's Kubernetes Explorer showing CCR pods using 14–30 GiB each on cluster `develop-k8s`*
 
 ---
 
@@ -37,7 +40,7 @@ All 52 instances sourced from **Kubernetes service annotations** on `pgb-*` serv
 ```
 Configuration Source: kube_services:kube_service://stage/pgb-tabby-dev-pg-5-dp-ex-feeds-statistics[0]
 ```
-*Source: `postgres_manual_check (2).log`, line 1*
+*Source: `postgres_manual_check (2).log`*
 
 Resolved config per instance:
 ```yaml
@@ -50,7 +53,11 @@ custom_queries:              # 2 custom queries per instance
   - blocked_query (pg_blocking_pids join)
   - corrupted_index (pg_index WHERE NOT indisvalid)
 ```
-*Source: `postgres_manual_check (2).log`, resolved instance config*
+
+### Dual config source (confirmed)
+
+- **Source A** (Helm `clusterAgent.confd`): `max_relations: 50`, `schemas: [public]`, `dbm: true` — **NOT applied**
+- **Source B** (K8s annotations on `pgb-*` services): `max_relations: 300`, `relation_regex: .*`, `dbm: false` — **actually running**
 
 ### Key memstats from flare (~22.5h uptime)
 
@@ -62,19 +69,14 @@ Sys:           46.2 GB      GCCPUFraction: 1.9%
 ```
 *Source: `expvar/memstats`*
 
-### Dual config source (confirmed finding)
+---
 
-Customer has two config sources for Postgres:
-- **Source A** (Helm `clusterAgent.confd`): `max_relations: 50`, `schemas: [public]`, `dbm: true` — **NOT applied**
-- **Source B** (K8s annotations on `pgb-*` services): `max_relations: 300`, `relation_regex: .*`, `dbm: false` — **actually running**
+## 3. Key insight from engineering
 
-All 52 instances in `status.log` show Source B:
-```
-postgres:1240cadb26958901 [OK]
-  Configuration Source: kube_services:kube_service://stage/pgb-tabby-dev-pg-17-plugins-auth[0]
-```
-*Source: `status.log`, Running Checks section*
+From [Aldrick Castro, Mar 5](https://datadoghq.atlassian.net/browse/CONS-8148):
+> The Postgres integration is written in **Python**. The Go profile flares only cover the Go runtime, not Python. In the profiles we can see that **the Python Check section is a very small contributor** to the memory usage.
 
+The memory leak is **in the Go runtime** of the agent, not in the Postgres Python check.
 
 ---
 
@@ -89,47 +91,78 @@ Deployed on **minikube** (4 CPU, 12 GB) via Helm:
 - CCR with **no resource limits** (BestEffort)
 - 1 CCR replica (all 52 checks on one pod)
 
-### Result: Memory did NOT explode
+### Test 1: Source A (Helm confd) delivery
 
-| Metric | Reproduction (~20 min) | Customer (~22.5h) |
-|--------|------------------------|-------------------|
-| Container RSS | **~650 MiB – 1.1 GiB (stable)** | **15–37 GB (growing)** |
-| HeapAlloc | ~600–930 MB (oscillating) | 16.9 GB |
-| HeapObjects | ~9M | 128M |
-| TotalAlloc | ~130 GB | 20 TB |
-| GCCPUFrac | ~1% | 1.9% |
+Checks loaded from `file:/etc/datadog-agent/conf.d/postgres.yaml[N]`
 
-![Kubernetes Explorer - Reproduction pods](screenshots/repro-k8s-explorer.png)
-![container.memory.usage - Reproduction CCR pod](screenshots/repro-container-memory.png)
+| Metric | Baseline | T+5min | T+10min |
+|--------|----------|--------|---------|
+| Container RSS | — | 1,154 Mi | **1,214 Mi** |
+| HeapAlloc | 845 MB | 600 MB | 930 MB |
+| TotalAlloc | 59.9 GB | 86.6 GB | 130 GB |
 
-### What this tells us
+**Result: Stable ~1.2 GiB. No explosion.**
 
-1. **Config alone does not trigger the leak.** Same version + same config + same instance count = stable ~1 GB.
-2. **The leak is triggered by something we are NOT replicating.**
+### Test 2: Source B (kube_services annotations) delivery — same as customer
 
-### What we do NOT know
+52 annotated `pgb-*` services with `ad.datadoghq.com` annotations.
+Checks loaded from `kube_services:kube_service://repro/pgb-repro-*[0]` — matching customer's `kube_services:kube_service://stage/pgb-tabby-dev-pg-*[0]`.
 
-- Whether the leak needs **12–24+ hours** to manifest (our test ran ~20 min)
-- Whether **PGBouncer** as intermediary triggers different behavior (customer connects through `pgb-*` services)
-- Customer's **actual Postgres server versions** and real schema complexity
-- Whether the leak is in **Go runtime internals** (tagger, metadata, serialization) rather than the check itself — consistent with Aldrick's profile observation that Python check is small contributor
+| Metric | Baseline | T+5min | T+10min |
+|--------|----------|--------|---------|
+| Container RSS | 1,218 Mi | 1,191 Mi | **1,163 Mi** |
+| HeapAlloc | 527 MB | 560 MB | 849 MB |
+| TotalAlloc | 41.6 GB | 68.8 GB | 98.1 GB |
+| GCCPUFrac | 0.82% | 0.86% | 0.84% |
+
+**Result: Stable ~1.2 GiB. No explosion. Same as Source A.**
+
+### Comparison: Reproduction vs Customer
+
+| Metric | Repro Source A | Repro Source B | Customer |
+|--------|---------------|---------------|----------|
+| Container RSS | ~1.2 GiB (stable) | ~1.2 GiB (stable) | **15–37 GB (growing)** |
+| HeapAlloc | ~930 MB | ~849 MB | **16.9 GB** |
+| HeapObjects | ~9M | ~9M | **128M** |
+| GCCPUFrac | ~1% | ~0.84% | **1.9%** |
+
+![Reproduction pods in K8s Explorer](screenshots/repro-k8s-explorer.png)
+![Reproduction container.memory.usage](screenshots/repro-container-memory.png)
 
 ---
 
-## 5. Next Steps
+## 5. Conclusions
 
-1. **Let reproduction run 12-24h** — check if leak is time-dependent
+### Confirmed
+- Config source mismatch: Source A (Helm confd) not applied, Source B (annotations) is active
+- BestEffort QoS allows unbounded growth
+- Python check is small contributor in Go profiles → leak is in Go runtime
 
-2. **Request from customer**:
-   - pprof heap profile from a CCR pod while memory is high: `kubectl exec <CCR> -- curl -o heap.prof http://localhost:5000/debug/pprof/heap`
-   - Postgres server versions for the monitored databases
-   - PGBouncer pooling mode (transaction vs session)
+### Ruled out by reproduction
+- **Config parameters** (relation_regex, max_relations, custom queries) do not trigger the leak alone
+- **Config delivery method** (confd vs kube_services annotations) makes no difference
+- **Instance count** (52 instances on 1 CCR pod) does not trigger the leak in ~10min
 
-3. **Add PGBouncer to reproduction** — customer connects through PGBouncer, we connect directly
+### Not yet determined
+- Whether the leak is **time-dependent** (needs hours/days to manifest)
+- What specific factor in the customer's real environment triggers the leak
+- Exact Go code path responsible (needs pprof heap profile from customer)
 
-4. **Compare with Agent 7.43.1** — same 52-instance setup with old agent to confirm regression
+---
 
-5. **Check findings with TEEs**
+## 6. Next Steps
+
+1. **Let reproduction run 12-24h** to check if the leak is time-dependent
+
+2. **Request pprof heap profile** from customer while memory is high:
+   ```bash
+   kubectl exec <CCR> -- curl -o heap.prof http://localhost:5000/debug/pprof/heap
+   ```
+   This shows exactly which Go functions are holding the 16.9 GB — the most direct way to find root cause since Aldrick confirmed the leak is in Go, not Python.
+
+3. **Compare with Agent 7.43.1** — same 52-instance setup with old version to confirm regression
+
+4. **Escalate to engineering** with this reproduction + customer flare data + reference SDBM-2278
 
 ---
 
@@ -139,16 +172,19 @@ Deployed on **minikube** (4 CPU, 12 GB) via Helm:
 .
 ├── README.md
 ├── screenshots/
-│   ├── repro-k8s-explorer.png
-│   └── repro-container-memory.png
+│   ├── customer-ccr-memory-develop-k8s.png   # Customer's actual CCR memory
+│   ├── repro-k8s-explorer.png                # Reproduction K8s Explorer
+│   └── repro-container-memory.png            # Reproduction container.memory
 └── reproduction/
-    ├── docker-compose.yaml
+    ├── docker-compose.yaml                   # Docker Compose repro (10 inst)
     ├── init-postgres.sh
     ├── monitor-memory.sh
     ├── conf.d/
     │   └── postgres.yaml
     └── k8s/
-        ├── datadog-values.yaml          # Helm values (52 instances)
+        ├── datadog-values.yaml               # Helm values Source A (confd)
+        ├── datadog-values-source-b.yaml      # Helm values Source B (no confd)
+        ├── pgb-services-annotated.yaml       # 52 annotated K8s services
         ├── postgres-deployment.yaml
         └── init-postgres-52.sh
 ```

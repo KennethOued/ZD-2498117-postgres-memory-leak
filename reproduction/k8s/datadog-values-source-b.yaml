@@ -1,0 +1,56 @@
+## Reproduction: ZD-2498117 / CONS-8148
+## Source B: kube_services annotations (matching customer's actual config delivery)
+## NO confd — checks discovered via annotated K8s services
+## CCR with NO resource limits (BestEffort QoS)
+
+datadog:
+  apiKey: "${DD_API_KEY}"
+  site: "datadoghq.com"
+  clusterName: "repro-zd-2498117"
+  clusterChecks:
+    enabled: true
+  dogstatsd:
+    useHostPort: true
+  logs:
+    enabled: false
+  apm:
+    portEnabled: false
+  processAgent:
+    enabled: true
+    processCollection: false
+  orchestratorExplorer:
+    enabled: true
+  collectKubernetesEvents: true
+  kubeStateMetricsEnabled: true
+  kubelet:
+    tlsVerify: false
+
+agents:
+  image:
+    tag: "7.74.1"
+  containers:
+    agent:
+      resources:
+        requests:
+          cpu: "200m"
+          memory: "256Mi"
+        limits:
+          cpu: "500m"
+          memory: "512Mi"
+
+clusterAgent:
+  image:
+    tag: "7.74.1"
+  replicas: 1
+  env:
+    - name: DD_EXTRA_LISTENERS
+      value: "kube_services"
+    - name: DD_EXTRA_CONFIG_PROVIDERS
+      value: "kube_services"
+
+clusterChecksRunner:
+  enabled: true
+  replicas: 1
+  image:
+    tag: "7.74.1"
+  resources: {}
