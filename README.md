@@ -94,15 +94,6 @@ One check (`pgb-tabby-dev-pg-01-ep-dba-replica-invoices`) is failing with `FATAL
 
 ---
 
-## 3. Key insight from engineering
-
-From [Aldrick Castro, Mar 5](https://datadoghq.atlassian.net/browse/CONS-8148):
-> The Postgres integration is written in **Python**. The Go profile flares only cover the Go runtime, not Python. In the profiles we can see that **the Python Check section is a very small contributor** to the memory usage.
-
-The memory leak is **in the Go runtime** of the agent, not in the Postgres Python check.
-
----
-
 ## 4. Reproduction
 
 ### Setup
