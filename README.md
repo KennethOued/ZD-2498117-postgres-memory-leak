@@ -21,6 +21,8 @@ Customer tried:
 | Total CCR memory | ~18 GiB | ~100 GiB | **~190 GiB** |
 | Per-pod range | ~3 GiB | ~15–40 GiB | 2–29 GiB |
 
+*Source: customer comments in [CONS-8148](https://datadoghq.atlassian.net/browse/CONS-8148)*
+
 ![Customer CCR pods on develop-k8s](screenshots/customer-ccr-memory-develop-k8s.png)
 *Customer's Kubernetes Explorer showing CCR pods using 14–30 GiB each on cluster `develop-k8s`*
 
@@ -40,7 +42,7 @@ All 52 instances sourced from **Kubernetes service annotations** on `pgb-*` serv
 ```
 Configuration Source: kube_services:kube_service://stage/pgb-tabby-dev-pg-5-dp-ex-feeds-statistics[0]
 ```
-*Source: https://datadog.zendesk.com/attachments/token/gubgvKqRDHs7KeBMBh9Wmp0Cv/?name=postgres_manual_check.log *
+*Source: `postgres_manual_check (2).log`*
 
 Resolved config per instance:
 ```yaml
@@ -59,18 +61,21 @@ custom_queries:              # 2 custom queries per instance
 - **Source A** (Helm `clusterAgent.confd`): `max_relations: 50`, `schemas: [public]`, `dbm: true` — **NOT applied**
 - **Source B** (K8s annotations on `pgb-*` services): `max_relations: 300`, `relation_regex: .*`, `dbm: false` — **actually running**
 
-### Key memstats from flare (~22.5h uptime)
+### Memstats from customer flare
 
-```
-Alloc:         16.9 GB      HeapObjects:  128M
-HeapInuse:     21.0 GB      TotalAlloc:   20 TB
-HeapSys:       45.4 GB      NumGC:        5,710
-Sys:           46.2 GB      GCCPUFraction: 1.9%
-```
-*Source: `expvar/memstats`*
-https://datadog.zendesk.com/attachments/token/oexbPgM9tAywbck3JCP6mCuU1/?name=datadog-agent-2026-03-19T16-37-50Z-info.zip
+The flare contains two CCR pod snapshots:
+
+| Metric | Customer Pod 1 | Customer Pod 2 | Source |
+|--------|---------------|---------------|--------|
+| HeapAlloc | **6.05 GB** | **16.9 GB** | `expvar/memstats` line 192 / `logs/gke-tabby-dev-gke-monitoring-poo 3/expvar/memstats` line 192 |
+| HeapObjects | **44.4M** | **128M** | same files, line 195 |
+| TotalAlloc | 18.9 TB | 20.2 TB | same files, line 727 |
+| GCCPUFrac | 1.55% | 1.9% | same files, line 190 |
+| NumGC | 7,040 | 5,710 | same files, line 207 |
 
 ### Flare aggregator data — metrics volume
+
+*Source: `logs/gke-tabby-dev-gke-monitoring-poo 3/expvar/aggregator`*
 
 ```
 ChecksMetricSample: 3.46 billion total
@@ -88,9 +93,14 @@ Notable outlier checks (from `expvar/runner`):
 | `pg-01-ep-notify` | **12,892** | **283,590** | 336 ms |
 | typical check | ~1,400 | ~30,000 | ~250 ms |
 
-The `dp-features-store` checks produce **25–44x more metrics** than typical checks due to `relation_regex: .*` matching hundreds of tables.
+One check (`pgb-tabby-dev-pg-01-ep-dba-replica-invoices`) is failing: `FATAL: database "invoices" does not exist` — 22 errors, 0 successes.
 
-One check (`pgb-tabby-dev-pg-01-ep-dba-replica-invoices`) is failing with `FATAL: database "invoices" does not exist` — 22 errors, 0 successes.
+---
+
+## 3. Key insight from engineering
+
+From [Aldrick Castro, Mar 5](https://datadoghq.atlassian.net/browse/CONS-8148):
+> The Postgres integration is written in **Python**. The Go profile flares only cover the Go runtime, not Python. In the profiles we can see that **the Python Check section is a very small contributor** to the memory usage.
 
 ---
 
@@ -109,47 +119,46 @@ Deployed on **minikube** (4 CPU, 12 GB) via Helm:
 
 | Metric | What it measures |
 |--------|-----------------|
-| **Container RSS** | Total physical memory used by the container (reported by OS). Includes Go heap, Python, libs, caches. This is what Kubernetes uses for OOMKill decisions. |
-| **HeapAlloc** | Go heap memory currently held by live objects. Goes up as checks produce data, drops when GC frees it. A growing HeapAlloc that never drops = leak. |
-| **TotalAlloc** | Cumulative bytes ever allocated by Go since process start. Only goes up. The rate (difference between checkpoints) shows allocation churn. |
-| **GCCPUFrac** | Fraction of CPU spent on garbage collection. <2% = healthy. >10% = GC struggling. |
+| **Container RSS** | Total physical memory the container uses (from OS). What Kubernetes uses for OOMKill. |
+| **HeapAlloc** | Go heap memory held by live objects right now. Oscillates as GC runs. Growing over time = leak. |
+| **TotalAlloc** | Cumulative bytes ever allocated since process start. Only goes up. Difference between checkpoints = allocation rate. |
+| **GCCPUFrac** | Fraction of CPU spent on garbage collection. <2% is normal. |
 
 ### Test 1: Source A (Helm confd) delivery
 
-Checks loaded from `file:/etc/datadog-agent/conf.d/postgres.yaml[N]`
+*Source: `kubectl top pod` + `curl http://localhost:5000/debug/vars` on CCR pod*
 
 | Metric | Baseline | T+5min | T+10min |
 |--------|----------|--------|---------|
-| Container RSS | — | 1,154 Mi | **1,214 Mi** |
+| Container RSS | — | 1,154 Mi | 1,214 Mi |
 | HeapAlloc | 845 MB | 600 MB | 930 MB |
 | TotalAlloc | 59.9 GB | 86.6 GB | 130 GB |
 
-**Result: Stable ~1.2 GiB. No explosion.**
+**Result: Stable ~1.2 GiB.**
 
 ### Test 2: Source B (kube_services annotations) delivery — same as customer
 
-52 annotated `pgb-*` services with `ad.datadoghq.com` annotations.
-Checks loaded from `kube_services:kube_service://repro/pgb-repro-*[0]` — matching customer's `kube_services:kube_service://stage/pgb-tabby-dev-pg-*[0]`.
+*Source: `kubectl top pod` + `curl http://localhost:5000/debug/vars` on CCR pod*
 
 | Metric | Baseline | T+5min | T+10min |
 |--------|----------|--------|---------|
-| Container RSS | 1,218 Mi | 1,191 Mi | **1,163 Mi** |
+| Container RSS | 1,218 Mi | 1,191 Mi | 1,163 Mi |
 | HeapAlloc | 527 MB | 560 MB | 849 MB |
 | TotalAlloc | 41.6 GB | 68.8 GB | 98.1 GB |
 | GCCPUFrac | 0.82% | 0.86% | 0.84% |
 
-Allocation rate: ~27 GB / 5 min = **~5.4 GB/min of churn**, but HeapAlloc stays bounded — GC keeps up.
+**Result: Stable ~1.2 GiB. Same as Source A.**
 
-**Result: Stable ~1.2 GiB. No explosion. Same as Source A.**
+### All memstats compared
 
-### Comparison: Reproduction vs Customer
-
-| Metric | Repro Source A | Repro Source B | Customer |
-|--------|---------------|---------------|----------|
-| Container RSS | ~1.2 GiB (stable) | ~1.2 GiB (stable) | **15–37 GB (growing)** |
-| HeapAlloc | ~930 MB | ~849 MB | **16.9 GB** |
-| HeapObjects | ~9M | ~9M | **128M** |
-| GCCPUFrac | ~1% | ~0.84% | **1.9%** |
+| Metric | Repro Source A | Repro Source B | Customer Pod 1 | Customer Pod 2 |
+|--------|---------------|---------------|----------------|----------------|
+| Container RSS | ~1.2 GiB (stable) | ~1.2 GiB (stable) | n/a | 15–37 GB (screenshot) |
+| HeapAlloc | 930 MB | 849 MB | **6.05 GB** | **16.9 GB** |
+| HeapObjects | 6.3M | 6.3M | **44.4M** | **128M** |
+| GCCPUFrac | ~1% | 0.84% | 1.55% | 1.9% |
+| TotalAlloc | 130 GB (~10min) | 98.1 GB (~10min) | 18.9 TB (~22.5h) | 20.2 TB (~22.5h) |
+| Source | `curl debug/vars` | `curl debug/vars` | `expvar/memstats` | `logs/.../expvar/memstats` |
 
 ![Reproduction pods in K8s Explorer](screenshots/repro-k8s-explorer.png)
 ![Reproduction container.memory.usage](screenshots/repro-container-memory.png)
@@ -158,47 +167,29 @@ Allocation rate: ~27 GB / 5 min = **~5.4 GB/min of churn**, but HeapAlloc stays 
 
 ## 5. pprof heap profile — reproduction CCR (~45 min uptime)
 
-Captured from reproduction CCR pod via `curl -s 'http://localhost:5000/debug/pprof/heap?debug=1'`.
-
-### Runtime summary
+*Source: `curl -s 'http://localhost:5000/debug/pprof/heap?debug=1'` on CCR pod*
 
 ```
-HeapAlloc:     568 MB       (live Go memory in use)
-MaxRSS:        1.33 GB      (total process memory)
-TotalAlloc:    229 GB       (cumulative allocations in ~45 min)
-HeapObjects:   6.3 million  (live objects on heap)
-GCCPUFrac:     0.93%        (healthy)
+HeapAlloc:     568 MB
+MaxRSS:        1.33 GB
+TotalAlloc:    229 GB
+HeapObjects:   6.3 million
+GCCPUFrac:     0.93%
 NumGC:         536
 ```
 
 ### Top Go allocators (live memory)
 
-| Live Memory | Function | What it does |
-|------------|----------|--------------|
-| 7.6 MB | `stream.(*Compressor).Close` | Serializer compressing payloads for intake |
-| 1.3 MB | `aggregator.(*contextResolver).trackContext` | Tracking metric tag contexts |
-| 1.3 MB | `aggregator.(*CheckSampler).commitSeries` | Committing metric series for flush |
-| 1.2 MB | `aggregator.(*contextResolver).trackContext` | Same, different code path |
-| 1.1 MB | `metrics.ContextMetrics.AddSample` | Adding samples to aggregator |
-| 0.05 MB | `tags.(*Store).Insert` | Tagger storing entity tags |
-| 0.02 MB | `python.(*stringInterner).intern` | Python check string interning |
+| Live Memory | Function |
+|------------|----------|
+| 7.6 MB | `stream.(*Compressor).Close` |
+| 1.3 MB | `aggregator.(*contextResolver).trackContext` |
+| 1.3 MB | `aggregator.(*CheckSampler).commitSeries` |
+| 1.1 MB | `metrics.ContextMetrics.AddSample` |
+| 0.05 MB | `tags.(*Store).Insert` |
+| 0.02 MB | `python.(*stringInterner).intern` |
 
-**Total live heap across all 867 allocation sites: ~14 MB tracked by pprof.**
-
-No function holds more than 7.6 MB — everything is healthy.
-
-### Reproduction vs Customer pprof comparison
-
-| | Reproduction (~45 min) | Customer (~22.5h) |
-|--|--|--|
-| HeapAlloc | **568 MB** | **16,900 MB** (30x more) |
-| HeapObjects | **6.3 million** | **128 million** (20x more) |
-| TotalAlloc | 229 GB | 20 TB |
-| Top allocator | 7.6 MB (serializer) | **Unknown** (no pprof from customer) |
-| GCCPUFrac | 0.93% | 1.9% |
-| MaxRSS | 1.33 GB | 15–37 GB |
-
-The customer has **20x more live objects** and **30x more live memory**. Something in their environment causes Go objects to accumulate and never be freed — a pprof from their pod would show which function.
+No function holds more than 7.6 MB. No pprof is available from the customer's pods.
 
 ---
 
@@ -206,10 +197,10 @@ The customer has **20x more live objects** and **30x more live memory**. Somethi
 
 ### Confirmed
 - Config source mismatch: Source A (Helm confd) not applied, Source B (annotations) is active
-- BestEffort QoS allows unbounded growth
-- Python check is small contributor in Go profiles → leak is in Go runtime
-- Some checks (`dp-features-store`) produce 25-44x more metrics than typical checks
-- Reproduction pprof shows healthy allocation — no function holds more than 7.6 MB
+- BestEffort QoS allows unbounded growth (no memory limit set)
+- Customer's HeapAlloc (6–16.9 GB) and HeapObjects (44–128M) are far above reproduction values (568–930 MB / 6.3M) with the same config and Agent version
+- GCCPUFrac is low (1.5–1.9%) even with 16.9 GB heap — GC is not struggling, it simply cannot free objects that are still referenced
+- On Agent 7.43.1, same checks ran at ~3 GiB/pod (customer's own prod baseline from CONS-8148)
 
 ### Ruled out by reproduction
 - **Config parameters** (relation_regex, max_relations, custom queries) do not trigger the leak alone
@@ -217,9 +208,8 @@ The customer has **20x more live objects** and **30x more live memory**. Somethi
 - **Instance count** (52 instances on 1 CCR pod) does not trigger the leak in ~45 min
 
 ### Not yet determined
-- Whether the leak is **time-dependent** (needs hours/days to manifest)
-- What specific factor in the customer's real environment triggers the leak
-- Exact Go code path responsible — a pprof from the customer's pod at 16.9 GB would show which function(s) hold the leaked memory
+- Whether the leak needs **hours/days** to manifest (repro ran ~45 min, customer pods ran 22.5h+)
+- Exact Go code path responsible (no pprof available from customer pods)
 
 ---
 
@@ -227,7 +217,7 @@ The customer has **20x more live objects** and **30x more live memory**. Somethi
 
 1. **Let reproduction run 12-24h** to check if the leak is time-dependent
 
-2. **Request pprof heap profile** from customer while memory is high ?
+2. **Request pprof heap profile** from customer while memory is high:
    ```bash
    kubectl exec <CCR> -- curl -o heap.prof http://localhost:5000/debug/pprof/heap
    ```
