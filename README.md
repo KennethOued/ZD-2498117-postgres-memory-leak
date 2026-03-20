@@ -40,7 +40,7 @@ All 52 instances sourced from **Kubernetes service annotations** on `pgb-*` serv
 ```
 Configuration Source: kube_services:kube_service://stage/pgb-tabby-dev-pg-5-dp-ex-feeds-statistics[0]
 ```
-*Source: `postgres_manual_check (2).log`*
+*Source: https://datadog.zendesk.com/attachments/token/gubgvKqRDHs7KeBMBh9Wmp0Cv/?name=postgres_manual_check.log
 
 Resolved config per instance:
 ```yaml
@@ -61,6 +61,7 @@ custom_queries:              # 2 custom queries per instance
 
 ### Key memstats from flare (~22.5h uptime)
 
+https://datadog.zendesk.com/attachments/token/oexbPgM9tAywbck3JCP6mCuU1/?name=datadog-agent-2026-03-19T16-37-50Z-info.zip
 ```
 Alloc:         16.9 GB      HeapObjects:  128M
 HeapInuse:     21.0 GB      TotalAlloc:   20 TB
