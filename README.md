@@ -3,7 +3,7 @@
 **Ticket**: [ZD-2498117](https://datadog.zendesk.com/agent/tickets/2498117)  
 **Jira**: [CONS-8148](https://datadoghq.atlassian.net/browse/CONS-8148)  
 **Related**: [SDBM-2278](https://datadoghq.atlassian.net/browse/SDBM-2278) (similar pattern, different customer, Agent 7.73.3)  
-**Related**: [CONS-8086](https://datadoghq.atlassian.net/browse/CONS-8086)  
+**Related**: [CONS-8086](https://datadoghq.atlassian.net/browse/CONS-8086) (engineering review)  
 **Investigator**: Kenneth Ouedraogo (TSE2)
 
 ---
@@ -40,7 +40,7 @@ All 52 instances sourced from **Kubernetes service annotations** on `pgb-*` serv
 ```
 Configuration Source: kube_services:kube_service://stage/pgb-tabby-dev-pg-5-dp-ex-feeds-statistics[0]
 ```
-*Source: https://datadog.zendesk.com/attachments/token/gubgvKqRDHs7KeBMBh9Wmp0Cv/?name=postgres_manual_check.log
+*Source: `postgres_manual_check (2).log`*
 
 Resolved config per instance:
 ```yaml
@@ -61,7 +61,6 @@ custom_queries:              # 2 custom queries per instance
 
 ### Key memstats from flare (~22.5h uptime)
 
-https://datadog.zendesk.com/attachments/token/oexbPgM9tAywbck3JCP6mCuU1/?name=datadog-agent-2026-03-19T16-37-50Z-info.zip
 ```
 Alloc:         16.9 GB      HeapObjects:  128M
 HeapInuse:     21.0 GB      TotalAlloc:   20 TB
@@ -69,6 +68,37 @@ HeapSys:       45.4 GB      NumGC:        5,710
 Sys:           46.2 GB      GCCPUFraction: 1.9%
 ```
 *Source: `expvar/memstats`*
+
+### Flare aggregator data — metrics volume
+
+```
+ChecksMetricSample: 3.46 billion total
+SeriesFlushed:      3.45 billion
+Series per flush:   ~228,000
+Number of flushes:  5,699
+```
+
+Notable outlier checks (from `expvar/runner`):
+
+| Check | MetricSamples/run | TotalMetricSamples | Avg exec time |
+|-------|-------------------|-------------------|---------------|
+| `pg-5-replica-0-dp-features-store` | **61,748** | **1,605,455** | 1,935 ms |
+| `pg-25-dp-features-store` | **35,863** | **789,057** | 967 ms |
+| `pg-01-ep-notify` | **12,892** | **283,590** | 336 ms |
+| typical check | ~1,400 | ~30,000 | ~250 ms |
+
+The `dp-features-store` checks produce **25–44x more metrics** than typical checks due to `relation_regex: .*` matching hundreds of tables.
+
+One check (`pgb-tabby-dev-pg-01-ep-dba-replica-invoices`) is failing with `FATAL: database "invoices" does not exist` — 22 errors, 0 successes.
+
+---
+
+## 3. Key insight from engineering
+
+From [Aldrick Castro, Mar 5](https://datadoghq.atlassian.net/browse/CONS-8148):
+> The Postgres integration is written in **Python**. The Go profile flares only cover the Go runtime, not Python. In the profiles we can see that **the Python Check section is a very small contributor** to the memory usage.
+
+The memory leak is **in the Go runtime** of the agent, not in the Postgres Python check.
 
 ---
 
@@ -82,6 +112,15 @@ Deployed on **minikube** (4 CPU, 12 GB) via Helm:
 - Postgres 16, **52 databases × 300 tables** each
 - CCR with **no resource limits** (BestEffort)
 - 1 CCR replica (all 52 checks on one pod)
+
+### Metrics glossary
+
+| Metric | What it measures |
+|--------|-----------------|
+| **Container RSS** | Total physical memory used by the container (reported by OS). Includes Go heap, Python, libs, caches. This is what Kubernetes uses for OOMKill decisions. |
+| **HeapAlloc** | Go heap memory currently held by live objects. Goes up as checks produce data, drops when GC frees it. A growing HeapAlloc that never drops = leak. |
+| **TotalAlloc** | Cumulative bytes ever allocated by Go since process start. Only goes up. The rate (difference between checkpoints) shows allocation churn. |
+| **GCCPUFrac** | Fraction of CPU spent on garbage collection. <2% = healthy. >10% = GC struggling. |
 
 ### Test 1: Source A (Helm confd) delivery
 
@@ -107,6 +146,8 @@ Checks loaded from `kube_services:kube_service://repro/pgb-repro-*[0]` — match
 | TotalAlloc | 41.6 GB | 68.8 GB | 98.1 GB |
 | GCCPUFrac | 0.82% | 0.86% | 0.84% |
 
+Allocation rate: ~27 GB / 5 min = **~5.4 GB/min of churn**, but HeapAlloc stays bounded — GC keeps up.
+
 **Result: Stable ~1.2 GiB. No explosion. Same as Source A.**
 
 ### Comparison: Reproduction vs Customer
@@ -123,38 +164,86 @@ Checks loaded from `kube_services:kube_service://repro/pgb-repro-*[0]` — match
 
 ---
 
-## 5. Conclusions
+## 5. pprof heap profile — reproduction CCR (~45 min uptime)
+
+Captured from reproduction CCR pod via `curl -s 'http://localhost:5000/debug/pprof/heap?debug=1'`.
+
+### Runtime summary
+
+```
+HeapAlloc:     568 MB       (live Go memory in use)
+MaxRSS:        1.33 GB      (total process memory)
+TotalAlloc:    229 GB       (cumulative allocations in ~45 min)
+HeapObjects:   6.3 million  (live objects on heap)
+GCCPUFrac:     0.93%        (healthy)
+NumGC:         536
+```
+
+### Top Go allocators (live memory)
+
+| Live Memory | Function | What it does |
+|------------|----------|--------------|
+| 7.6 MB | `stream.(*Compressor).Close` | Serializer compressing payloads for intake |
+| 1.3 MB | `aggregator.(*contextResolver).trackContext` | Tracking metric tag contexts |
+| 1.3 MB | `aggregator.(*CheckSampler).commitSeries` | Committing metric series for flush |
+| 1.2 MB | `aggregator.(*contextResolver).trackContext` | Same, different code path |
+| 1.1 MB | `metrics.ContextMetrics.AddSample` | Adding samples to aggregator |
+| 0.05 MB | `tags.(*Store).Insert` | Tagger storing entity tags |
+| 0.02 MB | `python.(*stringInterner).intern` | Python check string interning |
+
+**Total live heap across all 867 allocation sites: ~14 MB tracked by pprof.**
+
+No function holds more than 7.6 MB — everything is healthy.
+
+### Reproduction vs Customer pprof comparison
+
+| | Reproduction (~45 min) | Customer (~22.5h) |
+|--|--|--|
+| HeapAlloc | **568 MB** | **16,900 MB** (30x more) |
+| HeapObjects | **6.3 million** | **128 million** (20x more) |
+| TotalAlloc | 229 GB | 20 TB |
+| Top allocator | 7.6 MB (serializer) | **Unknown** (no pprof from customer) |
+| GCCPUFrac | 0.93% | 1.9% |
+| MaxRSS | 1.33 GB | 15–37 GB |
+
+The customer has **20x more live objects** and **30x more live memory**. Something in their environment causes Go objects to accumulate and never be freed — a pprof from their pod would show which function.
+
+---
+
+## 6. Conclusions
 
 ### Confirmed
 - Config source mismatch: Source A (Helm confd) not applied, Source B (annotations) is active
 - BestEffort QoS allows unbounded growth
 - Python check is small contributor in Go profiles → leak is in Go runtime
+- Some checks (`dp-features-store`) produce 25-44x more metrics than typical checks
+- Reproduction pprof shows healthy allocation — no function holds more than 7.6 MB
 
 ### Ruled out by reproduction
 - **Config parameters** (relation_regex, max_relations, custom queries) do not trigger the leak alone
 - **Config delivery method** (confd vs kube_services annotations) makes no difference
-- **Instance count** (52 instances on 1 CCR pod) does not trigger the leak in ~10min
+- **Instance count** (52 instances on 1 CCR pod) does not trigger the leak in ~45 min
 
 ### Not yet determined
 - Whether the leak is **time-dependent** (needs hours/days to manifest)
 - What specific factor in the customer's real environment triggers the leak
-- Exact Go code path responsible (needs pprof heap profile from customer)
+- Exact Go code path responsible — a pprof from the customer's pod at 16.9 GB would show which function(s) hold the leaked memory
 
 ---
 
-## 6. Next Steps
+## 7. Next Steps
 
 1. **Let reproduction run 12-24h** to check if the leak is time-dependent
 
-2. **Request pprof heap profile** from customer while memory is high ?
+2. **Request pprof heap profile** from customer while memory is high:
    ```bash
    kubectl exec <CCR> -- curl -o heap.prof http://localhost:5000/debug/pprof/heap
    ```
-   
+   This will show which Go function(s) hold the 16.9 GB. In our reproduction, the top allocator is 7.6 MB (serializer). In the customer's, we expect one function to dominate with gigabytes — that's the leak.
 
 3. **Compare with Agent 7.43.1** — same 52-instance setup with old version to confirm regression
 
-4. **Double check with TEEs** 
+4. **Double check with TEEs**
 
 ---
 
