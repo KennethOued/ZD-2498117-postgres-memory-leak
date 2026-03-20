@@ -40,7 +40,7 @@ All 52 instances sourced from **Kubernetes service annotations** on `pgb-*` serv
 ```
 Configuration Source: kube_services:kube_service://stage/pgb-tabby-dev-pg-5-dp-ex-feeds-statistics[0]
 ```
-*Source: `postgres_manual_check (2).log`*
+*Source: https://datadog.zendesk.com/attachments/token/gubgvKqRDHs7KeBMBh9Wmp0Cv/?name=postgres_manual_check.log *
 
 Resolved config per instance:
 ```yaml
@@ -68,6 +68,7 @@ HeapSys:       45.4 GB      NumGC:        5,710
 Sys:           46.2 GB      GCCPUFraction: 1.9%
 ```
 *Source: `expvar/memstats`*
+https://datadog.zendesk.com/attachments/token/oexbPgM9tAywbck3JCP6mCuU1/?name=datadog-agent-2026-03-19T16-37-50Z-info.zip
 
 ### Flare aggregator data — metrics volume
 
@@ -235,11 +236,10 @@ The customer has **20x more live objects** and **30x more live memory**. Somethi
 
 1. **Let reproduction run 12-24h** to check if the leak is time-dependent
 
-2. **Request pprof heap profile** from customer while memory is high:
+2. **Request pprof heap profile** from customer while memory is high ?
    ```bash
    kubectl exec <CCR> -- curl -o heap.prof http://localhost:5000/debug/pprof/heap
    ```
-   This will show which Go function(s) hold the 16.9 GB. In our reproduction, the top allocator is 7.6 MB (serializer). In the customer's, we expect one function to dominate with gigabytes — that's the leak.
 
 3. **Compare with Agent 7.43.1** — same 52-instance setup with old version to confirm regression
 
