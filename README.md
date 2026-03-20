@@ -42,7 +42,7 @@ All 52 instances sourced from **Kubernetes service annotations** on `pgb-*` serv
 ```
 Configuration Source: kube_services:kube_service://stage/pgb-tabby-dev-pg-5-dp-ex-feeds-statistics[0]
 ```
-*Source: `postgres_manual_check (2).log`*
+*Source: https://datadog.zendesk.com/attachments/token/gubgvKqRDHs7KeBMBh9Wmp0Cv/?name=postgres_manual_check.log*
 
 Resolved config per instance:
 ```yaml
@@ -65,13 +65,15 @@ custom_queries:              # 2 custom queries per instance
 
 The flare contains two CCR pod snapshots:
 
-| Metric | Customer Pod 1 | Customer Pod 2 | Source |
-|--------|---------------|---------------|--------|
-| HeapAlloc | **6.05 GB** | **16.9 GB** | `expvar/memstats` line 192 / `logs/gke-tabby-dev-gke-monitoring-poo 3/expvar/memstats` line 192 |
+| Metric | `...clusterchecks-679694c97f-7qhkc` (Mar 17, ~22.6h uptime) | `...clusterchecks-5bdbc75d87-mvqjp` (Mar 19, ~23.8h uptime) | Source |
+|--------|--------------------------------------------------------------|--------------------------------------------------------------|--------|
+| HeapAlloc | **6.05 GB** | **16.9 GB** | `expvar/memstats` line 192 / `logs/.../expvar/memstats` line 192 |
 | HeapObjects | **44.4M** | **128M** | same files, line 195 |
 | TotalAlloc | 18.9 TB | 20.2 TB | same files, line 727 |
 | GCCPUFrac | 1.55% | 1.9% | same files, line 190 |
 | NumGC | 7,040 | 5,710 | same files, line 207 |
+
+*Pod names from `status.log` line 29 (`socket-hostname`) in each flare directory.*
 
 ### Flare aggregator data — metrics volume
 
@@ -97,13 +99,6 @@ One check (`pgb-tabby-dev-pg-01-ep-dba-replica-invoices`) is failing: `FATAL: da
 
 ---
 
-## 3. Key insight from engineering
-
-From [Aldrick Castro, Mar 5](https://datadoghq.atlassian.net/browse/CONS-8148):
-> The Postgres integration is written in **Python**. The Go profile flares only cover the Go runtime, not Python. In the profiles we can see that **the Python Check section is a very small contributor** to the memory usage.
-
----
-
 ## 4. Reproduction
 
 ### Setup
@@ -115,14 +110,6 @@ Deployed on **minikube** (4 CPU, 12 GB) via Helm:
 - CCR with **no resource limits** (BestEffort)
 - 1 CCR replica (all 52 checks on one pod)
 
-### Metrics glossary
-
-| Metric | What it measures |
-|--------|-----------------|
-| **Container RSS** | Total physical memory the container uses (from OS). What Kubernetes uses for OOMKill. |
-| **HeapAlloc** | Go heap memory held by live objects right now. Oscillates as GC runs. Growing over time = leak. |
-| **TotalAlloc** | Cumulative bytes ever allocated since process start. Only goes up. Difference between checkpoints = allocation rate. |
-| **GCCPUFrac** | Fraction of CPU spent on garbage collection. <2% is normal. |
 
 ### Test 1: Source A (Helm confd) delivery
 
@@ -151,13 +138,13 @@ Deployed on **minikube** (4 CPU, 12 GB) via Helm:
 
 ### All memstats compared
 
-| Metric | Repro Source A | Repro Source B | Customer Pod 1 | Customer Pod 2 |
-|--------|---------------|---------------|----------------|----------------|
+| Metric | Repro Source A | Repro Source B | `...7qhkc` (Mar 17) | `...mvqjp` (Mar 19) |
+|--------|---------------|---------------|----------------------|----------------------|
 | Container RSS | ~1.2 GiB (stable) | ~1.2 GiB (stable) | n/a | 15–37 GB (screenshot) |
 | HeapAlloc | 930 MB | 849 MB | **6.05 GB** | **16.9 GB** |
 | HeapObjects | 6.3M | 6.3M | **44.4M** | **128M** |
 | GCCPUFrac | ~1% | 0.84% | 1.55% | 1.9% |
-| TotalAlloc | 130 GB (~10min) | 98.1 GB (~10min) | 18.9 TB (~22.5h) | 20.2 TB (~22.5h) |
+| TotalAlloc | 130 GB (~10min) | 98.1 GB (~10min) | 18.9 TB (~22.6h) | 20.2 TB (~23.8h) |
 | Source | `curl debug/vars` | `curl debug/vars` | `expvar/memstats` | `logs/.../expvar/memstats` |
 
 ![Reproduction pods in K8s Explorer](screenshots/repro-k8s-explorer.png)
@@ -198,12 +185,12 @@ No function holds more than 7.6 MB. No pprof is available from the customer's po
 ### Confirmed
 - Config source mismatch: Source A (Helm confd) not applied, Source B (annotations) is active
 - BestEffort QoS allows unbounded growth (no memory limit set)
-- Customer's HeapAlloc (6–16.9 GB) and HeapObjects (44–128M) are far above reproduction values (568–930 MB / 6.3M) with the same config and Agent version
-- GCCPUFrac is low (1.5–1.9%) even with 16.9 GB heap — GC is not struggling, it simply cannot free objects that are still referenced
-- On Agent 7.43.1, same checks ran at ~3 GiB/pod (customer's own prod baseline from CONS-8148)
+- Customer's HeapAlloc (6.05 GB on `7qhkc`, 16.9 GB on `mvqjp`) and HeapObjects (44.4M / 128M) are far above reproduction values (568–930 MB / 6.3M) with the same config and Agent version
+- GCCPUFrac is low (1.5–1.9%) even with 16.9 GB heap — GC is not struggling, seems it simply cannot free objects that are still referenced
+- Seems on Agent 7.43.1, same checks ran at ~3 GiB/pod (customer's own prod baseline from CONS-8148)
 
 ### Ruled out by reproduction
-- **Config parameters** (relation_regex, max_relations, custom queries) do not trigger the leak alone
+- **Config parameters** (relation_regex, max_relations, custom queries) did not trigger the leak alone on my side
 - **Config delivery method** (confd vs kube_services annotations) makes no difference
 - **Instance count** (52 instances on 1 CCR pod) does not trigger the leak in ~45 min
 
